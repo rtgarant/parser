@@ -1,0 +1,29 @@
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+
+# Dependencies
+venv/
+.venv/
+.env/
+
+# Database
+*.db
+
+# Temporary files
+*.tmp
+*.swp
+```
