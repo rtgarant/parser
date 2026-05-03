@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trudvsem Parser - Локальное Приложение</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background: #ffffff;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background: #f1f5f9;
+        }
+
+        .filter-section {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .vacancy-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .vacancy-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .vacancy-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .vacancy-company {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .vacancy-salary {
+            font-size: 18px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .vacancy-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stats-bar {
+            background: #ffffff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+            padding: 8px 0;
+        }
+
+        .checkbox-input {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>
+                    <div class="logo-text">Trudvsem Parser</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Локальное приложение v1.0</div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="exportToCSV()">
+                    <i class="fas fa-file-csv"></i>
+                    Экспорт CSV
+                </button>
+                <button class="btn-secondary" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    Экспорт Excel
+                </button>
+                <button class="btn-secondary" onclick="copyAllLinks()">
+                    <i class="fas fa-link"></i>
+                    Копировать ссылки
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; flex: 1; overflow: hidden;">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-search mr-2"></i>
+                            Ключевые слова
+                        </label>
+                        <input type="text" id="keywordInput" class="filter-input" placeholder="Должность, навыки...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            Регион
+                        </label>
+                        <select id="regionSelect" class="filter-select">
+                            <option value="">Вся Россия</option>
+                            <option value="Москва">Москва</option>
+                            <option value="Санкт-Петербург">Санкт-Петербург</option>
+                            <option value="Екатеринбург">Екатеринбург</option>
+                            <option value="Новосибирск">Новосибирск</option>
+                            <option value="Казань">Казань</option>
+                            <option value="Краснодар">Краснодар</option>
+                            <option value="Ростов-на-Дону">Ростов-на-Дону</option>
+                            <option value="Уфа">Уфа</option>
+                            <option value="Нижний Новгород">Нижний Новгород</option>
+                            <option value="Челябинск">Челябинск</option>
+                            <option value="Самара">Самара</option>
+                            <option value="Омск">Омск</option>
+                            <option value="Пермь">Пермь</option>
+                            <option value="Волгоград">Волгоград</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-ruble-sign mr-2"></i>
+                            Зарплата (от)
+                        </label>
+                        <input type="number" id="salaryMin" class="filter-input" placeholder="Минимальная зарплата">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-ruble-sign mr-2"></i>
+                            Зарплата (до)
+                        </label>
+                        <input type="number" id="salaryMax" class="filter-input" placeholder="Максимальная зарплата">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            Дата публикации
+                        </label>
+                        <select id="dateSelect" class="filter-select">
+                            <option value="any">За все время</option>
+                            <option value="1">За последние 24 часа</option>
+                            <option value="3">За 3 дня</option>
+                            <option value="7">За неделю</option>
+                            <option value="14">За 2 недели</option>
+                            <option value="30">За месяц</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-briefcase mr-2"></i>
+                            Тип занятости
+                        </label>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox-input" id="fullTime" checked>
+                                Полная занятость
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox-input" id="partTime">
+                                Частичная занятость
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox-input" id="remote">
+                                Удаленная работа
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox-input" id="shift">
+                                Сменный график
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-graduation-cap mr-2"></i>
+                            Опыт работы
+                        </label>
+                        <select id="experienceSelect" class="filter-select">
+                            <option value="">Любой опыт</option>
+                            <option value="no">Нет опыта</option>
+                            <option value="1">1-3 года</option>
+                            <option value="3">3-6 лет</option>
+                            <option value="6">Более 6 лет</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-sort-amount-down mr-2"></i>
+                            Сортировка
+                        </label>
+                        <select id="sortSelect" class="filter-select">
+                            <option value="date_desc">По дате (новые)</option>
+                            <option value="date_asc">По дате (старые)</option>
+                            <option value="salary_desc">По зарплате (высокая)</option>
+                            <option value="salary_asc">По зарплате (низкая)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-primary" onclick="startParsing()">
+                        <i class="fas fa-play"></i>
+                        Начать парсинг
+                    </button>
+
+                    <button class="btn-secondary" style="width: 100%; margin-top: 12px;" onclick="clearFilters()">
+                        <i class="fas fa-eraser"></i>
+                        Сбросить фильтры
+                    </button>
+                </div>
+
+                <div style="padding: 20px; border-top: 1px solid #e2e8f0;">
+                    <div style="font-size: 12px; color: #64748b; line-height: 1.6;">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Важно:</strong> Для корректной работы может потребоваться отключение CORS или использование прокси.
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 6px; font-size: 11px; color: #92400e;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Приложение работает в режиме симуляции для демонстрации. Для реального парсинга настройте CORS-прокси.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content" style="position: relative;">
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                    <div class="loader"></div>
+                    <div style="margin-top: 16px; font-weight: 600; color: #475569;">Парсинг вакансий...</div>
+                    <div id="loadingText" style="margin-top: 8px; font-size: 13px; color: #94a3b8;">Обработка данных</div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <button class="btn-secondary" style="margin-top: 16px;" onclick="cancelParsing()">
+                        <i class="fas fa-stop"></i>
+                        Отменить
+                    </button>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div>
+                        <span style="font-size: 14px; color: #64748b;">Найдено вакансий: </span>
+                        <span id="totalCount" style="font-size: 18px; font-weight: 700; color: #1e293b;">0</span>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-secondary" onclick="selectAll()">
+                            <i class="fas fa-check-square"></i>
+                            Выбрать все
+                        </button>
+                        <button class="btn-secondary" onclick="deselectAll()">
+                            <i class="far fa-square"></i>
+                            Снять выделение
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vacancy List -->
+                <div id="vacancyList" style="padding: 24px;">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Начните поиск вакансий</div>
+                        <div style="font-size: 14px;">Заполните фильтры и нажмите "Начать парсинг"</div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="toastMessage">Операция выполнена успешно</span>
+    </div>
+
+    <script>
+        // --- State ---
+        let allVacancies = [];
+        let filteredVacancies = [];
+        let currentPage = 1;
+        const itemsPerPage = 15;
+        let isParsing = false;
+        let selectedVacancies = new Set();
+
+        // --- Mock Data Generator ---
+        const REGIONS = ["Москва", "Санкт-Петербург", "Екатеринбург", "Новосибирск", "Казань", "Краснодар", "Ростов-на-Дону", "Уфа", "Нижний Новгород", "Челябинск", "Самара", "Омск", "Пермь", "Волгоград", "Воронеж", "Красноярск"];
+        
+        const JOB_TITLES = [
+            { title: "Водитель категории C", baseSalary: 80000 },
+            { title: "Водитель категории B", baseSalary: 65000 },
+            { title: "Менеджер по продажам", baseSalary: 60000 },
+            { title: "Старший менеджер по продажам", baseSalary: 90000 },
+            { title: "Сварщик", baseSalary: 90000 },
+            { title: "Сварщик НАКС", baseSalary: 120000 },
+            { title: "Бухгалтер", baseSalary: 75000 },
+            { title: "Главный бухгалтер", baseSalary: 150000 },
+            { title: "Инженер-конструктор", baseSalary: 85000 },
+            { title: "Ведущий инженер", baseSalary: 130000 },
+            { title: "Оператор станков с ЧПУ", baseSalary: 70000 },
+            { title: "Наладчик ЧПУ", baseSalary: 95000 },
+            { title: "Грузчик", baseSalary: 45000 },
+            { title: "Старший грузчик", baseSalary: 55000 },
+            { title: "Врач-терапевт", baseSalary: 65000 },
+            { title: "Врач-хирург", baseSalary: 120000 },
+            { title: "Медсестра", baseSalary: 45000 },
+            { title: "Учитель математики", baseSalary: 40000 },
+            { title: "Учитель начальных классов", baseSalary: 38000 },
+            { title: "Разработчик Python", baseSalary: 150000 },
+            { title: "Разработчик JavaScript", baseSalary: 140000 },
+            { title: "Frontend разработчик", baseSalary: 130000 },
+            { title: "Backend разработчик", baseSalary: 145000 },
+            { title: "DevOps инженер", baseSalary: 180000 },
+            { title: "Системный администратор", baseSalary: 80000 },
+            { title: "Специалист технической поддержки", baseSalary: 55000 },
+            { title: "Менеджер по закупкам", baseSalary: 70000 },
+            { title: "Логист", baseSalary: 65000 },
+            { title: "Складской работник", baseSalary: 50000 },
+            { title: "Кладовщик", baseSalary: 48000 },
+            { title: "Продавец-консультант", baseSalary: 45000 },
+            { title: "Кассир", baseSalary: 40000 },
+            { title: "Администратор", baseSalary: 50000 },
+            { title: "Уборщик производственных помещений", baseSalary: 35000 },
+            { title: "Охранник", baseSalary: 42000 },
+            { title: "Повар", baseSalary: 55000 },
+            { title: "Су-шеф", baseSalary: 90000 },
+            { title: "Шеф-повар", baseSalary: 150000 },
+            { title: "Официант", baseSalary: 45000 },
+            { title: "Бармен", baseSalary: 50000 }
+        ];
+
+        const COMPANIES = [
+            "ООО 'Вектор'", "АО 'СтройМаш'", "ИП Иванов", "ГБУ 'Здравоохранение'", 
+            "ПАО 'ЭнергоСбыт'", "ЗАО 'ТрансЛогистик'", "ООО 'ТехноПром'", 
+            "АО 'МеталлИнвест'", "ООО 'РитейлГрупп'", "ИП Петров", 
+            "ООО 'СтройСервис'", "АО 'НефтьГаз'", "ООО 'АгроХолдинг'",
+            "ПАО 'Банк Финанс'", "ООО 'ИТ Решения'", "ЗАО 'Производство Плюс'",
+            "ООО 'Торговый Дом'", "АО 'Логистика РФ'", "ООО 'СервисЦентр'",
+            "ИП Сидоров", "ООО 'Кадровое Агентство'", "АО 'Страхование'"
+        ];
+
+        const EXPERIENCE_LEVELS = ["Нет опыта", "1-3 года", "3-6 лет", "Более 6 лет"];
+        const EMPLOYMENT_TYPES = ["Полная занятость", "Частичная занятость", "Удаленная работа", "Сменный график"];
+
+        function generateMockVacancy(id, filters) {
+            const jobTemplate = JOB_TITLES[Math.floor(Math.random() * JOB_TITLES.length)];
+            const region = filters.region && filters.region !== "" ? filters.region : REGIONS[Math.floor(Math.random() * REGIONS.length)];
+            
+            let salary = jobTemplate.baseSalary + Math.floor(Math.random() * 50000);
+            if (filters.salaryMin && salary < filters.salaryMin) {
+                salary = filters.salaryMin + Math.floor(Math.random() * 30000);
+            }
+            if (filters.salaryMax && salary > filters.salaryMax) {
+                salary = filters.salaryMax - Math.floor(Math.random() * 10000);
+            }
+
+            const now = new Date();
+            let dateOffset = 0;
+            if (filters.date === "1") dateOffset = Math.floor(Math.random() * 24);
+            else if (filters.date === "3") dateOffset = Math.floor(Math.random() * 3 * 24);
+            else if (filters.date === "7") dateOffset = Math.floor(Math.random() * 7 * 24);
+            else if (filters.date === "14") dateOffset = Math.floor(Math.random() * 14 * 24);
+            else if (filters.date === "30") dateOffset = Math.floor(Math.random() * 30 * 24);
+            else dateOffset = Math.floor(Math.random() * 90 * 24);
+
+            const postDate = new Date(now.getTime() - (dateOffset * 60 * 60 * 1000));
+
+            const experience = EXPERIENCE_LEVELS[Math.floor(Math.random() * EXPERIENCE_LEVELS.length)];
+            const employment = EMPLOYMENT_TYPES[Math.floor(Math.random() * EMPLOYMENT_TYPES.length)];
+
+            return {
+                id: id,
+                title: jobTemplate.title,
+                company: COMPANIES[Math.floor(Math.random() * COMPANIES.length)],
+                salary: salary,
+                salaryFrom: salary,
+                salaryTo: salary + Math.floor(Math.random() * 30000),
+                region: region,
+                date: postDate.toLocaleDateString('ru-RU'),
+                dateFull: postDate.toISOString(),
+                link: `https://trudvsem.ru/vacancy/card/${Math.floor(Math.random() * 1000000)}`,
+                experience: experience,
+                employment: employment,
+                description: `Требуется ${jobTemplate.title.toLowerCase()} в компанию ${COMPANIES[Math.floor(Math.random() * COMPANIES.length)]}. Официальное трудоустройство, полный социальный пакет.`,
+                tags: ["Официальное трудоустройство", "ДМС", "Обучение"]
+            };
+        }
+
+        // --- Core Functions ---
+
+        async function startParsing() {
+            if (isParsing) return;
+
+            isParsing = true;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('vacancyList').innerHTML = '';
+            document.getElementById('pagination').style.display = 'none';
+            document.getElementById('totalCount').innerText = '0';
+
+            const filters = {
+                keyword: document.getElementById('keywordInput').value.trim(),
+                region: document.getElementById('regionSelect').value,
+                salaryMin: document.getElementById('salaryMin').value ? parseInt(document.getElementById('salaryMin').value) : null,
+                salaryMax: document.getElementById('salaryMax').value ? parseInt(document.getElementById('salaryMax').value) : null,
+                date: document.getElementById('dateSelect').value,
+                fullTime: document.getElementById('fullTime').checked,
+                partTime: document.getElementById('partTime').checked,
+                remote: document.getElementById('remote').checked,
+                shift: document.getElementById('shift').checked,
+                experience: document.getElementById('experienceSelect').value,
+                sort: document.getElementById('sortSelect').value
+            };
+
+            // Simulate parsing with progress
+            const totalItems = 100;
+            const batchSize = 10;
+            let parsedCount = 0;
+
+            try {
+                for (let i = 0; i < totalItems; i += batchSize) {
+                    if (!isParsing) throw new Error('Cancelled');
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    const batch = [];
+                    for (let j = 0; j < batchSize && (i + j) < totalItems; j++) {
+                        batch.push(generateMockVacancy(i + j + 1, filters));
+                    }
+                    
+                    parsedCount += batch.length;
+                    allVacancies = [...allVacancies, ...batch];
+                    
+                    // Update progress
+                    const progress = (parsedCount / totalItems) * 100;
+                    document.getElementById('progressFill').style.width = `${progress}%`;
+                    document.getElementById('loadingText').innerText = `Обработано ${parsedCount} из ${totalItems}`;
+                }
+
+                // Apply filters
+                applyFilters(filters);
+                
+                showToast('Парсинг завершен успешно!', 'success');
+            } catch (error) {
+                if (error.message !== 'Cancelled') {
+                    showToast('Ошибка при парсинге: ' + error.message, 'error');
+                }
+            } finally {
+                isParsing = false;
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('progressFill').style.width = '0%';
+            }
+        }
+
+        function applyFilters(filters) {
+            filteredVacancies = allVacancies.filter(vacancy => {
+                // Keyword filter
+                if (filters.keyword && !vacancy.title.toLowerCase().includes(filters.keyword.toLowerCase()) && 
+                    !vacancy.company.toLowerCase().includes(filters.keyword.toLowerCase())) {
+                    return false;
+                }
+
+                // Region filter
+                if (filters.region && vacancy.region !== filters.region) {
+                    return false;
+                }
+
+                // Salary filter
+                if (filters.salaryMin && vacancy.salary < filters.salaryMin) {
+                    return false;
+                }
+                if (filters.salaryMax && vacancy.salary > filters.salaryMax) {
+                    return false;
+                }
+
+                // Employment type filter
+                const employmentMatch = 
+                    (filters.fullTime && vacancy.employment === "Полная занятость") ||
+                    (filters.partTime && vacancy.employment === "Частичная занятость") ||
+                    (filters.remote && vacancy.employment === "Удаленная работа") ||
+                    (filters.shift && vacancy.employment === "Сменный график");
+                
+                if (!employmentMatch) {
+                    return false;
+                }
+
+                // Experience filter
+                if (filters.experience && vacancy.experience !== filters.experience) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Sort
+            if (filters.sort === 'date_desc') {
+                filteredVacancies.sort((a, b) => new Date(b.dateFull) - new Date(a.dateFull));
+            } else if (filters.sort === 'date_asc') {
+                filteredVacancies.sort((a, b) => new Date(a.dateFull) - new Date(b.dateFull));
+            } else if (filters.sort === 'salary_desc') {
+                filteredVacancies.sort((a, b) => b.salary - a.salary);
+            } else if (filters.sort === 'salary_asc') {
+                filteredVacancies.sort((a, b) => a.salary - b.salary);
+            }
+
+            currentPage = 1;
+            renderVacancies();
+            renderPagination();
+            document.getElementById('totalCount').innerText = filteredVacancies.length;
+        }
+
+        function renderVacancies() {
+            const container = document.getElementById('vacancyList');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filteredVacancies.slice(start, end);
+
+            if (pageItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Вакансии не найдены</div>
+                        <div style="font-size: 14px;">Попробуйте изменить параметры поиска</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = pageItems.map(item => `
+                <div class="vacancy-card" onclick="openVacancy('${item.link}')">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div class="vacancy-title">${item.title}</div>
+                            <div class="vacancy-company">
+                                <i class="fas fa-building mr-1"></i>
+                                ${item.company}
+                            </div>
+                            <div class="vacancy-salary">
+                                ${item.salary.toLocaleString('ru-RU')} - ${item.salaryTo.toLocaleString('ru-RU')} ₽
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" class="checkbox-input" 
+                                ${selectedVacancies.has(item.id) ? 'checked' : ''}
+                                onclick="event.stopPropagation(); toggleSelection(${item.id})">
+                            <a href="${item.link}" target="_blank" class="btn-secondary" onclick="event.stopPropagation()">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="vacancy-meta">
+                        <span class="meta-tag">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${item.region}
+                        </span>
+                        <span class="meta-tag">
+                            <i class="fas fa-calendar-alt"></i>
+                            ${item.date}
+                        </span>
+                        <span class="meta-tag">
+                            <i class="fas fa-briefcase"></i>
+                            ${item.employment}
+                        </span>
+                        <span class="meta-tag">
+                            <i class="fas fa-user-clock"></i>
+                            ${item.experience}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            const pageCount = Math.ceil(filteredVacancies.length / itemsPerPage);
+            
+            if (pageCount <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            container.innerHTML = '';
+
+            // Prev
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if(currentPage > 1) { currentPage--; renderVacancies(); renderPagination(); }};
+            container.appendChild(prevBtn);
+
+            // Pages
+            for (let i = 1; i <= pageCount; i++) {
+                if (i === 1 || i === pageCount || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const btn = document.createElement('button');
+                    btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    btn.innerText = i;
+                    btn.onclick = () => { currentPage = i; renderVacancies(); renderPagination(); };
+                    container.appendChild(btn);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const span = document.createElement('span');
+                    span.className = 'page-btn';
+                    span.style.border = 'none';
+                    span.innerText = '...';
+                    span.disabled = true;
+                    container.appendChild(span);
+                }
+            }
+
+            // Next
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === pageCount;
+            nextBtn.onclick = () => { if(currentPage < pageCount) { currentPage++; renderVacancies(); renderPagination(); }};
+            container.appendChild(nextBtn);
+        }
+
+        // --- Selection Functions ---
+
+        function toggleSelection(id) {
+            if (selectedVacancies.has(id)) {
+                selectedVacancies.delete(id);
+            } else {
+                selectedVacancies.add(id);
+            }
+            renderVacancies();
+        }
+
+        function selectAll() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filteredVacancies.slice(start, end);
+            pageItems.forEach(item => selectedVacancies.add(item.id));
+            renderVacancies();
+            showToast('Все вакансии на странице выбраны', 'success');
+        }
+
+        function deselectAll() {
+            selectedVacancies.clear();
+            renderVacancies();
+            showToast('Выделение снято', 'success');
+        }
+
+        // --- Export Functions ---
+
+        function exportToCSV() {
+            if (filteredVacancies.length === 0) {
+                showToast('Нет данных для экспорта', 'error');
+                return;
+            }
+
+            const headers = ["ID", "Должность", "Компания", "Зарплата (от)", "Зарплата (до)", "Регион", "Дата", "Опыт", "Занятость", "Ссылка"];
+            const csvRows = [headers.join(';')];
+
+            filteredVacancies.forEach(v => {
+                const row = [
+                    v.id,
+                    `"${v.title}"`,
+                    `"${v.company}"`,
+                    v.salary,
+                    v.salaryTo,
+                    `"${v.region}"`,
+                    v.date,
+                    `"${v.experience}"`,
+                    `"${v.employment}"`,
+                    v.link
+                ];
+                csvRows.push(row.join(';'));
+            });
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vacancies_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('CSV файл экспортирован', 'success');
+        }
+
+        function exportToExcel() {
+            if (filteredVacancies.length === 0) {
+                showToast('Нет данных для экспорта', 'error');
+                return;
+            }
+
+            // Create HTML table for Excel
+            let html = '<table><tr>';
+            html += '<th>ID</th><th>Должность</th><th>Компания</th><th>Зарплата (от)</th><th>Зарплата (до)</th><th>Регион</th><th>Дата</th><th>Опыт</th><th>Занятость</th><th>Ссылка</th>';
+            html += '</tr>';
+
+            filteredVacancies.forEach(v => {
+                html += `<tr>
+                    <td>${v.id}</td>
+                    <td>${v.title}</td>
+                    <td>${v.company}</td>
+                    <td>${v.salary}</td>
+                    <td>${v.salaryTo}</td>
+                    <td>${v.region}</td>
+                    <td>${v.date}</td>
+                    <td>${v.experience}</td>
+                    <td>${v.employment}</td>
+                    <td>${v.link}</td>
+                </tr>`;
+            });
+
+            html += '</table>';
+
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vacancies_${new Date().toISOString().split('T')[0]}.xls`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('Excel файл экспортирован', 'success');
+        }
+
+        function copyAllLinks() {
+            if (filteredVacancies.length === 0) {
+                showToast('Нет данных для копирования', 'error');
+                return;
+            }
+
+            const links = filteredVacancies.map(v => v.link).join('\n');
+            navigator.clipboard.writeText(links).then(() => {
+                showToast('Ссылки скопированы в буфер обмена', 'success');
+            }).catch(() => {
+                showToast('Ошибка копирования', 'error');
+            });
+        }
+
+        // --- Utility Functions ---
+
+        function clearFilters() {
+            document.getElementById('keywordInput').value = '';
+            document.getElementById('regionSelect').value = '';
+            document.getElementById('salaryMin').value = '';
+            document.getElementById('salaryMax').value = '';
+            document.getElementById('dateSelect').value = 'any';
+            document.getElementById('fullTime').checked = true;
+            document.getElementById('partTime').checked = false;
+            document.getElementById('remote').checked = false;
+            document.getElementById('shift').checked = false;
+            document.getElementById('experienceSelect').value = '';
+            document.getElementById('sortSelect').value = 'date_desc';
+            
+            showToast('Фильтры сброшены', 'success');
+        }
+
+        function cancelParsing() {
+            isParsing = false;
+            document.getElementById('loadingOverlay').style.display = 'none';
+            showToast('Парсинг отменен', 'error');
+        }
+
+        function openVacancy(link) {
+            window.open(link, '_blank');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.innerText = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // --- Keyboard Shortcuts ---
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                startParsing();
+            }
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                exportToCSV();
+            }
+        });
+
+        // Initialize
+        console.log('Trudvsem Parser initialized');
+        console.log('Press Ctrl+Enter to start parsing');
+        console.log('Press Ctrl+S to export CSV');
+    </script>
+</body>
+</html>
+
